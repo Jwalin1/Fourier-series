@@ -7,14 +7,15 @@ tau = 2 * np.pi
 
 
 
-def get_apprs(pts, coeffs, order):
-  pts_apprs = np.zeros((order, len(pts)), dtype=complex)
-  for order in tqdm(range(order), desc='calculating approximations'):
+def get_apprs(points, coeffs):
+  num_coeffs = len(coeffs)
+  points_apprs = np.zeros((num_coeffs, len(points)), dtype=complex)
+  for n in tqdm(range(num_coeffs), desc='calculating approximations'):
     # coeffs = [c0, c1, c-1, c2, c-2, ...]
-    pts_apprs[order] = fourier_series(coeffs[:1 + 2*order], len(pts))
+    points_apprs[n] = fourier_series(coeffs[:n], len(points))
 
-  errs = abs(pts - pts_apprs).mean(axis=1)  
-  return pts_apprs, errs
+  errs = abs(points - points_apprs).mean(axis=1)  
+  return points_apprs, errs
 
 
 
@@ -35,22 +36,22 @@ def get_epicycles(coeffs, time):
   return centers, radii
 
 
-def get_epicycle_data(coeffs, n_samples, order=None):
+def get_epicycle_data(coeffs, num_samples):
   # Generate data to animate.
-  n_centers = 1 + 2*order if order else len(coeffs)  # number of coeffs to sum
+  num_centers = num_coeffs = len(coeffs)
 
-  time_pts = np.linspace(0, 1, n_samples)
-  centers_time = np.zeros((n_samples, n_centers), dtype=complex)
-  radii_time = np.zeros((n_samples, n_centers-1), dtype=float)
+  time_points = np.linspace(0, 1, num_samples)
+  centers_time = np.zeros((num_samples, num_centers), dtype=complex)
+  radii_time = np.zeros((num_samples, num_centers-1), dtype=float)
 
-  circle_pts = 36
-  angle = np.linspace(0, tau, circle_pts)
-  circle_pts_time = np.zeros((n_samples, n_centers-1, circle_pts), dtype=complex)
+  circle_points = 36
+  angle = np.linspace(0, tau, circle_points)
+  circle_points_time = np.zeros((num_samples, num_centers-1, circle_points), dtype=complex)
 
-  for i, time_pt in enumerate(tqdm(time_pts, desc='calculating centers and radii')):
-    centers, radii = get_epicycles(coeffs[:n_centers], time_pt)
-    circle_pts = centers[:-1,None] + radii[:,None] * np.exp(1j * angle)[:,None].T
+  for i, time_pt in enumerate(tqdm(time_points, desc='calculating centers and radii')):
+    centers, radii = get_epicycles(coeffs, time_pt)
+    circle_points = centers[:-1,None] + radii[:,None] * np.exp(1j * angle)[:,None].T
     centers_time[i], radii_time[i] = centers, radii
-    circle_pts_time[i] = circle_pts
+    circle_points_time[i] = circle_points
 
-  return centers_time, radii_time, circle_pts_time
+  return centers_time, radii_time, circle_points_time

@@ -40,24 +40,24 @@ def get_DFT_approximation(x, n=None):
 
 
 
-'''Improves progressively as we increase order of approximation'''
-def get_coeffs(pts, order=None, rule='Riemann'):
-  if order is None:
-    order = len(pts) // 2
+'''Improves progressively as we increase number of coefficients used for approximation'''
+def get_coeffs(points, num_coeffs=None, rule='Riemann'):
+  if num_coeffs is None:
+    num_coeffs = len(points)
 
-  indices = np.arange(1 + 2*order)   #  0,  1,  2,  3,  4, ...
+  indices = np.arange(num_coeffs)   #  0,  1,  2,  3,  4, ...
   signs = 2*(indices % 2) - 1      # -1,  1, -1,  1, -1, ...
   magnitudes = (indices + 1) // 2  #  0,  1,  1,  2,  2, ...
   sequence = signs * magnitudes    #  0,  1, -1,  2, -2, ...
 
   if rule == 'Riemann':
-    period = np.linspace(0, 1, len(pts), endpoint=False)
-    coeffs = pts * np.exp(-1j * tau * sequence[:,None] * period)
-    coeffs = coeffs.sum(axis=1) / len(pts)
+    period = np.linspace(0, 1, len(points), endpoint=False)
+    coeffs = points * np.exp(-1j * tau * sequence[:,None] * period)
+    coeffs = coeffs.sum(axis=1) / len(points)
 
   elif rule in ['Trapezoidal', 'Simpson']:
-    period = np.linspace(0, 1, len(pts))
-    coeffs = pts * np.exp(-1j * tau * sequence[:,None] * period)
+    period = np.linspace(0, 1, len(points))
+    coeffs = points * np.exp(-1j * tau * sequence[:,None] * period)
     if rule == 'Trapezoidal':
       coeffs = integrate.trapezoid(coeffs, period)
     elif rule == 'Simpson':
@@ -72,7 +72,7 @@ def get_coeffs(pts, order=None, rule='Riemann'):
 def fourier_series(coeffs, samples=None):
   if samples is None:
     samples = len(coeffs)
-  order = len(coeffs) // 2
+  num_coeffs = len(coeffs)
   period = np.linspace(0, 1, samples)
 
   indices = np.arange(len(coeffs))  #  0,  1,  2,  3,  4, ...
@@ -85,7 +85,7 @@ def fourier_series(coeffs, samples=None):
   return series
 
 
-def get_fourier_approximation(pts, order=None):
-  coeffs = get_coeffs(pts, order)
-  appr_pts = fourier_series(coeffs, len(pts))
-  return appr_pts
+def get_fourier_approximation(points, num_coeffs=None):
+  coeffs = get_coeffs(points, num_coeffs)
+  appr_points = fourier_series(coeffs, len(points))
+  return appr_points

@@ -13,10 +13,10 @@ from modules.visualize import add_arrows, epicycles_animate
 
 
 
-def main(svg_path, order=100):
+def main(svg_path, num_coeffs=100):
     # Your main code here
     print(f"SVG file path: {svg_path}")
-    print(f"Order of terms used for approximation: {order}")
+    print(f"Number of coefficients used for approximation: {num_coeffs}")
 
     base = os.path.basename(svg_path)
     file_name = os.path.splitext(base)[0]
@@ -25,15 +25,15 @@ def main(svg_path, order=100):
     points = parse_svg(svg_path)
 
     print('\nEvolution animation')
-    coeffs = get_coeffs(points, order)
-    x_apprs, errs = get_apprs(points, coeffs, order)
-    anim = evolution_animate(x_apprs, errs)
+    coeffs = get_coeffs(points, num_coeffs)
+    points_apprs, errs = get_apprs(points, coeffs)
+    anim = evolution_animate(points_apprs, errs)
     anim.save(f"animations/{file_name}_evolution.gif", writer=animation.PillowWriter(fps=10))
 
 
     print('\nEpicycles animation')
     n_samples = len(points)  # Number of time points to sample.
-    centers_time, radii_time, circle_pts_time = get_epicycle_data(coeffs, n_samples, order)
+    centers_time, radii_time, circle_pts_time = get_epicycle_data(coeffs, n_samples)
     anim = epicycles_animate(centers_time, radii_time, circle_pts_time)
     anim.save(f"animations/{file_name}_epicycles.gif", writer=animation.PillowWriter(fps=10))
 
@@ -42,8 +42,8 @@ def main(svg_path, order=100):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("svg_path", help="Path to the SVG file")
-    parser.add_argument("-o", "--order", type=int, default=100,
-                        help="Order of terms used for approximation (default: 1)")
+    parser.add_argument("-n", "--num_coeffs", type=int, default=100,
+                        help="Number of coefficients used for approximation (default: 1)")
     args = parser.parse_args()
 
-    main(args.svg_path, args.order)
+    main(args.svg_path, args.num_coeffs)
