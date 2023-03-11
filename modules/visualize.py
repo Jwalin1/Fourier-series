@@ -37,11 +37,18 @@ def get_arrows(lines):
   angles = np.angle(lines_diffs)
 
   arrows = np.zeros((len(lines), 3), dtype=complex)
-
   arrows[:,0] = lines[:,1] - arrow_lens * np.exp(1j*(angles - tau/8))
   arrows[:,1] = lines[:,1]
   arrows[:,2] = lines[:,1] - arrow_lens * np.exp(1j*(angles + tau/8))
   return arrows
+
+def get_orientations(points_t0, points_t1):
+  differences_t0 = np.diff(points_t0)
+  differences_t1 = np.diff(points_t1)
+  angles_t0 = np.angle(differences_t0)
+  angles_t1 = np.angle(differences_t1)
+  orientations = np.sign(angles_t1 - angles_t0)
+  return orientations
 
 def plot_colored_lines(lines):
   plot_complex(lines[::2].T, color='red')
@@ -87,7 +94,8 @@ def epicycles_animate(centers_time, detail=7, show_stats=True):
 
   n_samples, n_centers = centers_time.shape
   theta = np.linspace(0, tau, 36)
-  colors = ['r' if i%2==0 else 'b' for i in range(n_centers - 1)]
+  orientations = get_orientations(centers_time[0], centers_time[1])
+  colors = ['r' if orientation==1 else 'b'for orientation in orientations]
   #Looping the data and capturing frame at each iteration
   for i, centers in enumerate(tqdm(centers_time, desc='generating epicycles animation')):
     radii = abs(np.diff(centers))

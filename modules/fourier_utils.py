@@ -16,7 +16,7 @@ def get_apprs(points, coeffs):
 
 
 
-def get_circle_centers(coeffs, num_samples):
+def get_circle_centers(coeffs, num_samples, sort=False):
   # Generate data to animate.
   num_centers = num_coeffs = len(coeffs)
 
@@ -27,6 +27,11 @@ def get_circle_centers(coeffs, num_samples):
   signs = 2*(indices % 2) - 1       # -1,  1, -1,  1, -1, ...
   magnitudes = (indices + 1) // 2   #  0,  1,  1,  2,  2, ...
   sequence = signs * magnitudes     #  0,  1, -1,  2, -2, ...
+
+  if sort:  # Sort all except first elem
+    sort_indices = np.argsort(abs(coeffs[1:]))[::-1]
+    coeffs = np.insert(coeffs[1:][sort_indices], 0, coeffs[0])
+    sequence =  np.insert(sequence[1:][sort_indices], 0, 0)
 
   for i, time in enumerate(tqdm(time_points, desc='calculating centers and radii')):
     series = coeffs * np.exp(1j * tau * sequence * time)
