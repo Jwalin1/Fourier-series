@@ -3,13 +3,13 @@ import argparse
 from matplotlib import animation
 
 from modules.data_utils import parse_svg
-from fourier_core import get_coeffs, get_fourier_approximation
+from fourier_core import get_coeffs
 
 from modules.fourier_utils import get_apprs
 from modules.visualize import evolution_animate
 
 from modules.fourier_utils import get_circle_centers
-from modules.visualize import add_arrows, epicycles_animate
+from modules.visualize import epicycles_animate
 
 
 

@@ -1,4 +1,4 @@
 # Fourier-series
 
 ## Usage:
-python main.py data/fourier -n 250
+python main.py data/fourier.svg -n 250
