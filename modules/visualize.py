@@ -14,7 +14,6 @@ def plot_complex(z, **kwargs):
   plt.plot(z.real, z.imag, **kwargs)
 
 def double_plot(points, points_appr, combined=False):
-
   if combined:
     fig, ax = plt.subplots(figsize=(16, 16))
     plot_complex(points, alpha=0.5)
@@ -30,44 +29,32 @@ def double_plot(points, points_appr, combined=False):
     plot_complex(points_appr)
 
 
-def add_arrows(points):
+def get_arrows(lines):
+  lines_diffs = np.diff(lines).squeeze()
+  arrow_lens = abs(lines_diffs) / 10
+  angles = np.angle(lines_diffs)
 
-  diff_points = np.diff(points)
-  arrow_lens = abs(diff_points) / 10
-  angles = np.angle(diff_points)
-  angles -= tau / 2
+  arrows = np.zeros((len(lines), 3), dtype=complex)
 
-  arrowed_points = np.zeros(5*len(points) - 4, dtype=complex)
-  arrowed_points[0] = points[0]
-
-  points = points[1:]
-  arrowed_points[1::5] = points
-  arrowed_points[2::5] = points + arrow_lens * np.exp(1j*(angles - tau/8))
-  arrowed_points[3::5] = points
-  arrowed_points[4::5] = points + arrow_lens * np.exp(1j*(angles + tau/8))
-  arrowed_points[5::5] = points
-  return arrowed_points
+  arrows[:,0] = lines[:,1] - arrow_lens * np.exp(1j*(angles - tau/8))
+  arrows[:,1] = lines[:,1]
+  arrows[:,2] = lines[:,1] - arrow_lens * np.exp(1j*(angles + tau/8))
+  return arrows
 
 
 
 
-def evolution_animate(points_apprs, errs=None, info=1):
-  if errs is None and info >= 3:
-    raise ValueError("errs argument is required when info >= 3")
-
+def evolution_animate(points_apprs, show_stats=True):
   fig, ax = plt.subplots(figsize=(6,6))  # Using default figsize.
   camera = Camera(fig)
-  if not info >= 3:
+  if not show_stats:
     plt.axis('off')
   
   #Looping the data and capturing frame at each iteration
   for i, points_appr in enumerate(tqdm(points_apprs, desc='generating evolution animation')):
     plot_complex(points_appr, c='y')
-    if info >= 1:
+    if show_stats:
       plt.text(0.5, 1.05, f'coeffs: {i+1}', transform = ax.transAxes)
-    if info >= 2:  
-      plt.text(0.25, 1.05, f'MAE: {errs[i]:.3f}', transform = ax.transAxes)
-
     camera.snap()
   plt.close(fig)  
     
@@ -75,24 +62,49 @@ def evolution_animate(points_apprs, errs=None, info=1):
   return anim
 
 
-def epicycles_animate(centers_time, radii_time, circle_points_time, info=1):
+def epicycles_animate(centers_time, detail=7, show_stats=True):
+  '''
+  detail =  1: white lines
+  detail =  3: arrowed white lines
+  detail =  7: arrowed white lines with circles
+  detail = 10: colored (blue & red) lines
+  detail = 13: colored (blue & red) lines with arrows
+  detail = 17: colored (blue & red) lines with circles
+  '''
   fig, ax = plt.subplots(figsize=(6,6))  # Using default figsize.
   camera = Camera(fig)
-  if not info >= 2:
+  if not show_stats:
     plt.axis('off')
 
   n_samples = centers_time.shape[0]
+  theta = np.linspace(0, tau, 36)
   #Looping the data and capturing frame at each iteration
-  for i in tqdm(range(n_samples), desc='generating epicycles animation'):
-    centers, radii = centers_time[i], radii_time[i]
-    # Plot lines with arrows.
-    plot_complex(add_arrows(centers), c='w')
-    # Plot circles.
-    plot_complex(circle_points_time[i].T, c='w', alpha=0.3)
+  for i, centers in enumerate(tqdm(centers_time, desc='generating epicycles animation')):
+    radii = abs(np.diff(centers))
+    lines = np.column_stack((centers[:-1], centers[1:]))
+    circles = centers[:-1][:,None] + radii[:,None] * np.exp(1j * theta.T)
+
+    if detail >= 1 and detail < 10:
+      plot_complex(centers, color='white')
+      if detail >= 3:
+        arrows = get_arrows(lines)
+        plot_complex(arrows.T, color='white')
+      if detail >= 7:
+        plot_complex(circles.T, color='white', alpha=0.3)
+
+    elif detail >= 10 and detail < 20:
+      plot_complex(lines[::2].T, color='red')
+      plot_complex(lines[1::2].T, color='blue')
+      if detail >= 13:
+        arrows = get_arrows(lines)
+        plot_complex(arrows[::2].T, color='red')
+        plot_complex(arrows[1::2].T, color='blue')
+      if detail >= 17:
+        plot_complex(circles.T, color='white', alpha=0.3)
+
     # Plot curve drawn so far.
     plot_complex(centers_time[:i+1, -1], c='y')
-
-    if info >= 1:
+    if show_stats:  # Display the elapsed time
       plt.text(0.4, 1.05, f'time: {i / (n_samples-1):.3f}', transform = ax.transAxes)
 
     camera.snap()

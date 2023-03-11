@@ -8,7 +8,7 @@ from fourier_core import get_coeffs, get_fourier_approximation
 from modules.fourier_utils import get_apprs
 from modules.visualize import evolution_animate
 
-from modules.fourier_utils import get_epicycle_data
+from modules.fourier_utils import get_circle_centers
 from modules.visualize import add_arrows, epicycles_animate
 
 
@@ -26,15 +26,15 @@ def main(svg_path, num_coeffs=100):
 
     print('\nEvolution animation')
     coeffs = get_coeffs(points, num_coeffs)
-    points_apprs, errs = get_apprs(points, coeffs)
-    anim = evolution_animate(points_apprs, errs)
+    points_apprs = get_apprs(points, coeffs)
+    anim = evolution_animate(points_apprs)
     anim.save(f"animations/{file_name}_evolution.gif", writer=animation.PillowWriter(fps=10))
 
 
     print('\nEpicycles animation')
     n_samples = len(points)  # Number of time points to sample.
-    centers_time, radii_time, circle_pts_time = get_epicycle_data(coeffs, n_samples)
-    anim = epicycles_animate(centers_time, radii_time, circle_pts_time)
+    centers_time = get_circle_centers(coeffs, n_samples)
+    anim = epicycles_animate(centers_time)
     anim.save(f"animations/{file_name}_epicycles.gif", writer=animation.PillowWriter(fps=10))
 
 
