@@ -28,14 +28,16 @@ def main(svg_path, num_coeffs=100):
     coeffs = get_coeffs(points, num_coeffs)
     points_apprs = get_apprs(points, coeffs)
     anim = evolution_animate(points_apprs)
-    anim.save(f"animations/{file_name}_evolution.gif", writer=animation.PillowWriter(fps=10))
+    anim.save(f"animations/{file_name}_evolution.gif",
+                writer=animation.PillowWriter(fps=10))
 
 
     print('\nEpicycles animation')
     n_samples = len(points)  # Number of time points to sample.
     centers_time = get_circle_centers(coeffs, n_samples)
     anim = epicycles_animate(centers_time)
-    anim.save(f"animations/{file_name}_epicycles.gif", writer=animation.PillowWriter(fps=10))
+    anim.save(f"animations/{file_name}_epicycles_{num_coeffs}.gif",
+                writer=animation.PillowWriter(fps=10))
 
 
 

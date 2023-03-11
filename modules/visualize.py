@@ -1,6 +1,8 @@
 import numpy as np
 from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
+from matplotlib.collections import LineCollection
+from matplotlib.collections import PatchCollection
 
 # For animation.
 from celluloid import Camera
@@ -41,14 +43,22 @@ def get_arrows(lines):
   arrows[:,2] = lines[:,1] - arrow_lens * np.exp(1j*(angles + tau/8))
   return arrows
 
+def plot_colored_lines(lines):
+  plot_complex(lines[::2].T, color='red')
+  plot_complex(lines[1::2].T, color='blue')
+
+def plot_circles(centers, radii):
+  patches = [plt.Circle((center.real, center.imag), radius)
+                    for center, radius in zip(centers, radii)]
+  coll_circles = PatchCollection(patches, alpha=0.3, color='white', facecolor='None')
+  plt.gca().add_collection(coll_circles)
 
 
 
 def evolution_animate(points_apprs, show_stats=True):
   fig, ax = plt.subplots(figsize=(6,6))  # Using default figsize.
   camera = Camera(fig)
-  if not show_stats:
-    plt.axis('off')
+  plt.axis('off')
   
   #Looping the data and capturing frame at each iteration
   for i, points_appr in enumerate(tqdm(points_apprs, desc='generating evolution animation')):
@@ -73,16 +83,16 @@ def epicycles_animate(centers_time, detail=7, show_stats=True):
   '''
   fig, ax = plt.subplots(figsize=(6,6))  # Using default figsize.
   camera = Camera(fig)
-  if not show_stats:
-    plt.axis('off')
+  plt.axis('off')
 
-  n_samples = centers_time.shape[0]
+  n_samples, n_centers = centers_time.shape
   theta = np.linspace(0, tau, 36)
+  colors = ['r' if i%2==0 else 'b' for i in range(n_centers - 1)]
   #Looping the data and capturing frame at each iteration
   for i, centers in enumerate(tqdm(centers_time, desc='generating epicycles animation')):
     radii = abs(np.diff(centers))
     lines = np.column_stack((centers[:-1], centers[1:]))
-    circles = centers[:-1][:,None] + radii[:,None] * np.exp(1j * theta.T)
+    # circles = centers[:-1][:,None] + radii[:,None] * np.exp(1j * theta.T)
 
     if detail >= 1 and detail < 10:
       plot_complex(centers, color='white')
@@ -90,17 +100,22 @@ def epicycles_animate(centers_time, detail=7, show_stats=True):
         arrows = get_arrows(lines)
         plot_complex(arrows.T, color='white')
       if detail >= 7:
-        plot_complex(circles.T, color='white', alpha=0.3)
+        plot_circles(centers, radii)
 
     elif detail >= 10 and detail < 20:
-      plot_complex(lines[::2].T, color='red')
-      plot_complex(lines[1::2].T, color='blue')
+      # Problem with z order of lines.
+      # plot_colored_lines(lines)
+      
+      # Handles z order properly.
+      coll_lines = LineCollection(np.dstack([lines.real, lines.imag]), colors=colors)
+      ax.add_collection(coll_lines)
       if detail >= 13:
         arrows = get_arrows(lines)
-        plot_complex(arrows[::2].T, color='red')
-        plot_complex(arrows[1::2].T, color='blue')
+        # plot_colored_lines(arrows)
+        coll_arrows = LineCollection(np.dstack([arrows.real, arrows.imag]), colors=colors)
+        ax.add_collection(coll_arrows)
       if detail >= 17:
-        plot_complex(circles.T, color='white', alpha=0.3)
+        plot_circles(centers, radii)
 
     # Plot curve drawn so far.
     plot_complex(centers_time[:i+1, -1], c='y')
