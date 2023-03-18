@@ -45,7 +45,7 @@ def get_coeffs(points, num_coeffs=None, rule='Riemann'):
   if num_coeffs is None:
     num_coeffs = len(points)
 
-  indices = np.arange(num_coeffs)   #  0,  1,  2,  3,  4, ...
+  indices = np.arange(num_coeffs)  #  0,  1,  2,  3,  4, ...
   signs = 2*(indices % 2) - 1      # -1,  1, -1,  1, -1, ...
   magnitudes = (indices + 1) // 2  #  0,  1,  1,  2,  2, ...
   sequence = signs * magnitudes    #  0,  1, -1,  2, -2, ...
@@ -66,20 +66,15 @@ def get_coeffs(points, num_coeffs=None, rule='Riemann'):
   else:
     raise Exception('Invalid rule')
   
-  return coeffs
+  return dict(zip(sequence, coeffs))
 
 
 def fourier_series(coeffs, samples=None):
   if samples is None:
     samples = len(coeffs)
-  num_coeffs = len(coeffs)
   period = np.linspace(0, 1, samples)
 
-  indices = np.arange(len(coeffs))  #  0,  1,  2,  3,  4, ...
-  signs = 2*(indices % 2) - 1       # -1,  1, -1,  1, -1, ...
-  magnitudes = (indices + 1) // 2   #  0,  1,  1,  2,  2, ...
-  sequence = signs * magnitudes     #  0,  1, -1,  2, -2, ...
-  
+  sequence, coeffs = map(np.array, zip(*coeffs.items()))
   series = coeffs * np.exp(1j * tau * sequence * period[:,None])
   series = series.sum(axis=1)
   return series

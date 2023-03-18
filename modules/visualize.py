@@ -31,6 +31,25 @@ def double_plot(points, points_appr, combined=False):
     plot_complex(points_appr)
 
 
+
+def evolution_animate(points_apprs, show_stats=True):
+  fig, ax = plt.subplots(figsize=(6,6))  # Using default figsize.
+  camera = Camera(fig)
+  plt.axis('off')
+  
+  #Looping the data and capturing frame at each iteration
+  for i, points_appr in enumerate(tqdm(points_apprs, desc='generating evolution animation')):
+    plot_complex(points_appr, c='y')
+    if show_stats:
+      plt.text(0.5, 1.05, f'harmonics: {i}', transform = ax.transAxes)
+    camera.snap()
+  plt.close(fig)  
+    
+  anim = camera.animate()
+  return anim
+
+
+
 def get_arrows(lines):
   lines_diffs = np.diff(lines).squeeze()
   arrow_lens = abs(lines_diffs) / 10
@@ -43,12 +62,9 @@ def get_arrows(lines):
   return arrows
 
 def get_orientations(points_t0, points_t1):
-  differences_t0 = np.diff(points_t0)
-  differences_t1 = np.diff(points_t1)
-  angles_t0 = np.angle(differences_t0)
-  angles_t1 = np.angle(differences_t1)
-  orientations = np.sign(angles_t1 - angles_t0)
-  return orientations
+  z1, z2 = np.diff(points_t0), np.diff(points_t1)
+  arg1, arg2 = np.angle(z1),  np.angle(z2)
+  return np.sign(arg2-arg1)
 
 def plot_colored_lines(lines):
   plot_complex(lines[::2].T, color='red')
@@ -62,25 +78,42 @@ def plot_circles(centers, radii):
 
 
 
-def evolution_animate(points_apprs, show_stats=True):
-  fig, ax = plt.subplots(figsize=(6,6))  # Using default figsize.
-  camera = Camera(fig)
-  plt.axis('off')
-  
-  #Looping the data and capturing frame at each iteration
-  for i, points_appr in enumerate(tqdm(points_apprs, desc='generating evolution animation')):
-    plot_complex(points_appr, c='y')
-    if show_stats:
-      plt.text(0.5, 1.05, f'coeffs: {i+1}', transform = ax.transAxes)
-    camera.snap()
-  plt.close(fig)  
+def _plot_epicycles_frame(centers, colors, curve, detail, ax=None):
+  ax = plt.gca() if ax is None else ax
+  radii = abs(np.diff(centers))
+  lines = np.column_stack((centers[:-1], centers[1:]))
+  # circles = centers[:-1][:,None] + radii[:,None] * np.exp(1j * theta.T)
+
+  if detail >= 1 and detail < 10:
+    plot_complex(centers, color='white')
+    if detail >= 3:
+      arrows = get_arrows(lines)
+      plot_complex(arrows.T, color='white')
+    if detail >= 7:
+      plot_circles(centers, radii)
+
+  elif detail >= 10 and detail < 20:
+    # Problem with z order of lines.
+    # plot_colored_lines(lines)
     
-  anim = camera.animate()
-  return anim
+    # Handles z order properly.
+    coll_lines = LineCollection(np.dstack([lines.real, lines.imag]), colors=colors)
+    ax.add_collection(coll_lines)
+    if detail >= 13:
+      arrows = get_arrows(lines)
+      # plot_colored_lines(arrows)
+      coll_arrows = LineCollection(np.dstack([arrows.real, arrows.imag]), colors=colors)
+      ax.add_collection(coll_arrows)
+    if detail >= 17:
+      plot_circles(centers, radii)
+
+  # Plot curve drawn so far.
+  plot_complex(curve, c='y')
 
 
 def epicycles_animate(centers_time, detail=7, show_stats=True):
   '''
+  detail =  0: only curve
   detail =  1: white lines
   detail =  3: arrowed white lines
   detail =  7: arrowed white lines with circles
@@ -98,35 +131,8 @@ def epicycles_animate(centers_time, detail=7, show_stats=True):
   colors = ['r' if orientation==1 else 'b'for orientation in orientations]
   #Looping the data and capturing frame at each iteration
   for i, centers in enumerate(tqdm(centers_time, desc='generating epicycles animation')):
-    radii = abs(np.diff(centers))
-    lines = np.column_stack((centers[:-1], centers[1:]))
-    # circles = centers[:-1][:,None] + radii[:,None] * np.exp(1j * theta.T)
-
-    if detail >= 1 and detail < 10:
-      plot_complex(centers, color='white')
-      if detail >= 3:
-        arrows = get_arrows(lines)
-        plot_complex(arrows.T, color='white')
-      if detail >= 7:
-        plot_circles(centers, radii)
-
-    elif detail >= 10 and detail < 20:
-      # Problem with z order of lines.
-      # plot_colored_lines(lines)
-      
-      # Handles z order properly.
-      coll_lines = LineCollection(np.dstack([lines.real, lines.imag]), colors=colors)
-      ax.add_collection(coll_lines)
-      if detail >= 13:
-        arrows = get_arrows(lines)
-        # plot_colored_lines(arrows)
-        coll_arrows = LineCollection(np.dstack([arrows.real, arrows.imag]), colors=colors)
-        ax.add_collection(coll_arrows)
-      if detail >= 17:
-        plot_circles(centers, radii)
-
-    # Plot curve drawn so far.
-    plot_complex(centers_time[:i+1, -1], c='y')
+    _plot_epicycles_frame(centers, colors, curve=centers_time[:i+1, -1],
+                          detail=detail, ax=ax)
     if show_stats:  # Display the elapsed time
       plt.text(0.4, 1.05, f'time: {i / (n_samples-1):.3f}', transform = ax.transAxes)
 
