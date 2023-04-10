@@ -62,8 +62,8 @@ def get_arrows(lines):
   return arrows
 
 def get_orientations(points_t0, points_t1):
-  z1, z2 = np.diff(points_t0), np.diff(points_t1)
-  arg1, arg2 = np.angle(z1),  np.angle(z2)
+  dt0, dt1 = np.diff(points_t0), np.diff(points_t1)
+  arg1, arg2 = np.angle(dt0),  np.angle(dt1)
   return np.sign(arg2-arg1)
 
 def plot_colored_lines(lines):
@@ -79,9 +79,19 @@ def plot_circles(centers, radii):
 
 
 def _plot_epicycles_frame(centers, colors, curve, detail, ax=None):
+  """
+    detail =  0: only curve
+    detail =  1: white lines
+    detail =  3: arrowed white lines
+    detail =  7: arrowed white lines with circles
+    detail = 10: colored (blue & red) lines
+    detail = 13: colored (blue & red) lines with arrows
+    detail = 17: colored (blue & red) lines with circles
+  """
   ax = plt.gca() if ax is None else ax
   radii = abs(np.diff(centers))
   lines = np.column_stack((centers[:-1], centers[1:]))
+  # theta = np.linspace(0, tau, 36)
   # circles = centers[:-1][:,None] + radii[:,None] * np.exp(1j * theta.T)
 
   if detail >= 1 and detail < 10:
@@ -108,27 +118,25 @@ def _plot_epicycles_frame(centers, colors, curve, detail, ax=None):
       plot_circles(centers, radii)
 
   # Plot curve drawn so far.
-  plot_complex(curve, c='y')
+  plot_complex(curve, color='yellow')
 
 
 def epicycles_animate(centers_time, detail=7, show_stats=True):
-  '''
-  detail =  0: only curve
-  detail =  1: white lines
-  detail =  3: arrowed white lines
-  detail =  7: arrowed white lines with circles
-  detail = 10: colored (blue & red) lines
-  detail = 13: colored (blue & red) lines with arrows
-  detail = 17: colored (blue & red) lines with circles
-  '''
   fig, ax = plt.subplots(figsize=(6,6))  # Using default figsize.
   camera = Camera(fig)
   plt.axis('off')
+  # plt.gca().set_aspect('equal')
 
   n_samples, n_centers = centers_time.shape
-  theta = np.linspace(0, tau, 36)
+  # Add (0,0) as the first center.
+  centers_time = np.hstack((np.zeros((n_samples, 1)), centers_time))
+
   orientations = get_orientations(centers_time[0], centers_time[1])
-  colors = ['r' if orientation==1 else 'b'for orientation in orientations]
+  colors = []
+  for orientation in orientations:
+    if orientation == 0: colors.append('white')
+    elif orientation == 1: colors.append('red')
+    elif orientation == -1: colors.append('blue')
   #Looping the data and capturing frame at each iteration
   for i, centers in enumerate(tqdm(centers_time, desc='generating epicycles animation')):
     _plot_epicycles_frame(centers, colors, curve=centers_time[:i+1, -1],

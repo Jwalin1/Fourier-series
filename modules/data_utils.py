@@ -27,9 +27,6 @@ def parse_svg(svg_path, n_points=1000):
 
   # Flip the imaginary component
   points = np.array(points).conj()
-
-  # Make it centered at origin (optional).
-  points -= points.mean()
   return points
 
 

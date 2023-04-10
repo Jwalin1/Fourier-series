@@ -23,10 +23,9 @@ def get_circle_centers(coeffs, num_samples, sort=False):
 
   time_points = np.linspace(0, 1, num_samples)
   centers_time = np.zeros((num_samples, num_centers), dtype=complex)
-
   sequence, coeffs = map(np.array, zip(*coeffs.items()))
 
-  if sort:  # Sort all except first elem
+  if sort:  # Sort all except first coefficient
     sort_indices = np.argsort(abs(coeffs[1:]))[::-1]
     coeffs = np.append(coeffs[0], coeffs[1:][sort_indices])
     sequence =  np.append(0, sequence[1:][sort_indices])
