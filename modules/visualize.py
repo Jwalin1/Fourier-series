@@ -50,7 +50,7 @@ def evolution_animate(points_apprs, show_stats=True):
 
 
 
-def get_arrows(lines):
+def compute_arrows(lines):
   lines_diffs = np.diff(lines).squeeze()
   arrow_lens = abs(lines_diffs) / 10
   angles = np.angle(lines_diffs)
@@ -61,7 +61,7 @@ def get_arrows(lines):
   arrows[:,2] = lines[:,1] - arrow_lens * np.exp(1j*(angles + tau/8))
   return arrows
 
-def get_orientations(points_t0, points_t1):
+def compute_orientations(points_t0, points_t1):
   dt0, dt1 = np.diff(points_t0), np.diff(points_t1)
   arg1, arg2 = np.angle(dt0),  np.angle(dt1)
   return np.sign(arg2-arg1)
@@ -97,7 +97,7 @@ def _plot_epicycles_frame(centers, colors, curve, detail, ax=None):
   if detail >= 1 and detail < 10:
     plot_complex(centers, color='white')
     if detail >= 3:
-      arrows = get_arrows(lines)
+      arrows = compute_arrows(lines)
       plot_complex(arrows.T, color='white')
     if detail >= 7:
       plot_circles(centers, radii)
@@ -110,7 +110,7 @@ def _plot_epicycles_frame(centers, colors, curve, detail, ax=None):
     coll_lines = LineCollection(np.dstack([lines.real, lines.imag]), colors=colors)
     ax.add_collection(coll_lines)
     if detail >= 13:
-      arrows = get_arrows(lines)
+      arrows = compute_arrows(lines)
       # plot_colored_lines(arrows)
       coll_arrows = LineCollection(np.dstack([arrows.real, arrows.imag]), colors=colors)
       ax.add_collection(coll_arrows)
@@ -121,17 +121,19 @@ def _plot_epicycles_frame(centers, colors, curve, detail, ax=None):
   plot_complex(curve, color='yellow')
 
 
-def epicycles_animate(centers_time, detail=7, show_stats=True):
+def epicycles_animate(centers_time, detail=7, show_stats=True, add_origin=False):
   fig, ax = plt.subplots(figsize=(6,6))  # Using default figsize.
   camera = Camera(fig)
-  plt.axis('off')
-  # plt.gca().set_aspect('equal')
+  # plt.axis('off')
+  plt.gca().set_aspect('equal')
 
   n_samples, n_centers = centers_time.shape
-  # Add (0,0) as the first center.
-  centers_time = np.hstack((np.zeros((n_samples, 1)), centers_time))
 
-  orientations = get_orientations(centers_time[0], centers_time[1])
+  if add_origin:
+    # Add (0,0) as the first center.
+    centers_time = np.hstack((np.zeros((n_samples, 1)), centers_time))
+
+  orientations = compute_orientations(centers_time[0], centers_time[1])
   colors = []
   for orientation in orientations:
     if orientation == 0: colors.append('white')

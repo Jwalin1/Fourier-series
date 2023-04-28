@@ -3,12 +3,12 @@ import argparse
 from matplotlib import animation
 
 from modules.data_utils import parse_svg
-from fourier_core import get_coeffs, get_fourier_approximation
+from fourier_core import compute_coeffs, compute_fourier_approximation
 
-from modules.fourier_utils import get_apprs
+from modules.fourier_utils import compute_apprs
 from modules.visualize import evolution_animate
 
-from modules.fourier_utils import get_circle_centers
+from modules.fourier_utils import compute_circle_centers
 from modules.visualize import epicycles_animate
 
 
@@ -23,12 +23,12 @@ def main(svg_path, num_harmonics=100):
 
     print('\nReading svg')
     points = parse_svg(svg_path)
-    # Make it centered around the origin (optional).
+    # Make it centered at origin (optional).
     points -= points.mean()
 
     print('\nEvolution animation')
-    coeffs = get_coeffs(points, num_coeffs)
-    points_apprs = get_apprs(points, coeffs)
+    coeffs = compute_coeffs(points, num_coeffs)
+    points_apprs = compute_apprs(points, coeffs)
     # At every even index we have sum of c_n and c_-n
     points_apprs = points_apprs[::2]
     anim = evolution_animate(points_apprs)
@@ -37,7 +37,7 @@ def main(svg_path, num_harmonics=100):
 
     print('\nEpicycles animation')
     n_samples = len(points)  # Number of time points to sample.
-    centers_time = get_circle_centers(coeffs, n_samples)
+    centers_time = compute_circle_centers(coeffs, n_samples)
     anim = epicycles_animate(centers_time)
     anim.save(f"animations/{file_name}_epicycles_{num_harmonics}.gif", writer=animation.PillowWriter(fps=10))
 

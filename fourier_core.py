@@ -31,14 +31,14 @@ def inv_DFT(X, num_samples=None):
   return x
 
 
-def get_DFT_approximation(x, num_coeffs=None, num_samples=None):
+def compute_DFT_approximation(x, num_coeffs=None, num_samples=None):
   X = DFT(x, num_coeffs)
   x_appr = inv_DFT(X, num_samples)
   return x_appr
 
 
 
-def get_coeffs(points, num_coeffs=None, rule='Riemann'):
+def compute_coeffs(points, num_coeffs=None, rule='Riemann'):
   """
     If rule is Riemann, it would be similar to DFT.
     Time goes from 0 to 1.
@@ -84,7 +84,7 @@ def fourier_series(coeffs, num_samples=None):
   return series
 
 
-def get_fourier_approximation(points, num_coeffs=None, num_samples=None):
-  coeffs = get_coeffs(points, num_coeffs)
+def compute_fourier_approximation(points, num_coeffs=None, num_samples=None):
+  coeffs = compute_coeffs(points, num_coeffs)
   appr_points = fourier_series(coeffs, num_samples)
   return appr_points

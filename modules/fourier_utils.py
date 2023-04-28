@@ -6,7 +6,7 @@ tau = 2 * np.pi
 
 
 
-def get_apprs(points, coeffs):
+def compute_apprs(points, coeffs):
   num_coeffs = len(coeffs)
   points_apprs = np.zeros((num_coeffs, len(points)), dtype=complex)
   for n in tqdm(range(1, 1 + num_coeffs), desc='calculating approximations'):
@@ -17,7 +17,7 @@ def get_apprs(points, coeffs):
 
 
 
-def get_circle_centers(coeffs, num_samples, sort=False):
+def compute_circle_centers(coeffs, num_samples, sort=False):
   # Generate data to animate.
   num_centers = len(coeffs)
 
