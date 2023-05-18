@@ -3,7 +3,7 @@ import argparse
 from matplotlib import animation
 
 from modules.data_utils import parse_svg
-from fourier_core import compute_coeffs, compute_fourier_approximation
+from fourier_core import compute_coeffs
 
 from modules.fourier_utils import compute_apprs
 from modules.visualize import evolution_animate

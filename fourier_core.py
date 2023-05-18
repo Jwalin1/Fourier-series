@@ -6,7 +6,7 @@ tau = 2 * np.pi
 
 def DFT(x, num_coeffs=None):
   """
-    Time goes from 0 to (N-1)/N.
+    Time goes from 0 to 1.
     Only uses positive coeffs.
     Gives exact result if full length is used
     but doesnt improve progressively.
