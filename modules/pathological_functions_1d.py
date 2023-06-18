@@ -2,7 +2,7 @@ import numpy as np
 from sympy import primepi
 
 
-def prime_staircase(x_range=(0,100), num_points=1000):
+def prime_staircase(x_range=(0,100), num_points=1001):
   x = np.linspace(*x_range, num_points)
   return x, np.array(list(map(lambda x: float(primepi(x)), x)))
 
@@ -17,11 +17,11 @@ def _cantor(x, n):
     elif 2/3 < x <= 1:
       return 0.5*(1 + _cantor(3*x-2, n-1))
 
-def devils_staircase(x_range=(0,1), num_points=1000):
+def devils_staircase(x_range=(0,1), num_points=1001):
   x = np.linspace(*x_range, num_points)
   return x, np.array(list(map(lambda x: _cantor(x, 100), x)))
 
-def weierstrass_sin(a=2, x_range=(0,1), num_points=1000,
+def weierstrass_sin(a=2, x_range=(0,1), num_points=1001,
                     num_iters=20):
   x = np.linspace(*x_range, num_points)
   sum_ = 0
@@ -30,7 +30,7 @@ def weierstrass_sin(a=2, x_range=(0,1), num_points=1000,
     sum_ += np.sin(t*x) / t
   return x, sum_
 
-def weierstrass_cos(a=0.5, b=5, x_range=(0,1), num_points=1000,
+def weierstrass_cos(a=0.5, b=5, x_range=(0,1), num_points=1001,
                     num_iters=20):
   x = np.linspace(*x_range, num_points)
   sum_ = 0
@@ -42,7 +42,7 @@ def weierstrass_cos(a=0.5, b=5, x_range=(0,1), num_points=1000,
 def _s(x):
   return abs(np.floor(x+0.5) - x)
 
-def blancmange(x_range=(0,0.5), num_points=1000,
+def blancmange(x_range=(0,0.5), num_points=1001,
                num_iters=20):
   x = np.linspace(*x_range, num_points)
   sum_ = sum([_s((2**n)*x) / (2**n)
@@ -61,28 +61,28 @@ def _question_mark(x):
   y = float(p)
 
   while True:
-      d /= 2
-      if y + d == y:
-          break
+    d /= 2
+    if y + d == y:
+      break
 
-      m = p + r
-      if m < 0 or p < 0:
-          break
+    m = p + r
+    if m < 0 or p < 0:
+      break
 
-      n = q + s
-      if n < 0:
-          break
+    n = q + s
+    if n < 0:
+      break
 
-      if x < m / n:
-          r = m
-          s = n
-      else:
-          y += d
-          p = m
-          q = n
+    if x < m / n:
+      r = m
+      s = n
+    else:
+      y += d
+      p = m
+      q = n
 
   return y + d
 
-def  minkowski(x_range=(0,1), num_points=1000):
+def  minkowski(x_range=(0,1), num_points=1001):
   x = np.linspace(*x_range, num_points)
   return x, np.array(list(map(_question_mark, x)))

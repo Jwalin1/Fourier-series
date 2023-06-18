@@ -23,8 +23,7 @@ def main(svg_path, num_harmonics=100):
 
     print('\nReading svg')
     points = parse_svg(svg_path)
-    # Make it centered at origin (optional).
-    points -= points.mean()
+    points -= points.mean()  # Make it centered at origin (optional).
 
     print('\nEvolution animation')
     coeffs = compute_coeffs(points, num_coeffs)

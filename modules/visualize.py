@@ -37,11 +37,11 @@ def evolution_animate(points_apprs, show_stats=True):
   camera = Camera(fig)
   plt.axis('off')
   
-  #Looping the data and capturing frame at each iteration
-  for i, points_appr in enumerate(tqdm(points_apprs, desc='generating evolution animation')):
+  # Looping the data and capturing frame at each iteration.
+  for num_coeffs, points_appr in tqdm(points_apprs.items(), desc='generating evolution animation'):
     plot_complex(points_appr, c='y')
     if show_stats:
-      plt.text(0.5, 1.05, f'harmonics: {i}', transform = ax.transAxes)
+      plt.text(0.4, 1.05, f'num coeffs: {num_coeffs}', transform = ax.transAxes)
     camera.snap()
   plt.close(fig)  
     

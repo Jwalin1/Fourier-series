@@ -25,7 +25,7 @@ def parse_svg(svg_path, n_points=1000):
     for time in tqdm(points_t, desc='time'):
       points.append(path_data.point(time))
 
-  # Flip the imaginary component
+  # Flip the imaginary component.
   points = np.array(points).conj()
   return points
 
@@ -36,8 +36,8 @@ def sort_points(points, start_index=0):
   sorted_points[0] = current_point
   points = np.delete(points, start_index)
 
-  for i in range(1,len(points)):
-    # Find the index of the nearest point
+  for i in range(1,len(points)+1):
+    # Find the index of the nearest point.
     distances = abs(points - current_point)
     index = np.argmin(distances)
     current_point = points[index]
