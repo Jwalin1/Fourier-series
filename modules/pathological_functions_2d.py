@@ -11,6 +11,16 @@ from . import data_utils
 tau = 2 * np.pi
 
 
+def resize_and_recenter(points, num_points=None, recenter=False):
+  # Interpolate the curve to make it have less number of points
+  if num_points is not None:
+    points = np.interp(x=np.linspace(0,1,num_points),xp=np.linspace(0,1,len(points)),fp=points)
+  else:
+    points = np.array(points)  
+  if recenter:  
+    points -= points.mean()  # Make it centered at origin (optional).
+  return points
+  
 def mandelbrot(size, iters, num_points=1001):
   x, y = np.linspace(-2, 1, size), np.linspace(-1.5, 1.5, size)
   x, y = np.meshgrid(x, y)
@@ -34,14 +44,22 @@ def mandelbrot(size, iters, num_points=1001):
   points.real = points.real*(3/size) - 2
   points.imag = points.imag*(3/size) - 1.5
 
-  # Interpolate the curve to make it have less number of points.
-  points = np.interp(x=np.linspace(0,1,num_points),xp=np.linspace(0,1,len(points)),fp=points)
+  # Interpolate the curve to make it have less number of points
+  points = resize_and_recenter(points, num_points)
   return points
 
 def fermat_spiral(time_range, num_points=1001):
   t = np.linspace(*time_range, num_points)
   s, t = np.sign(t), abs(t)
   points = s*np.sqrt(t)*np.exp(1j*t)
+  return points
+
+def euler_spiral(num_steps=720, dth=tau/360, num_points=1001):
+  th_values = np.arange(num_steps + 1)
+  th_values = (th_values*(th_values+1) / 2) * dth
+  pos_values = np.exp(1j * th_values)
+  points = np.cumsum(pos_values)
+  points = resize_and_recenter(points, num_points)
   return points
 
 def polyskelion(Nsp=3, Nwh=4, a=1, dt=0.1, num_points=1001):
@@ -69,7 +87,7 @@ def polyskelion(Nsp=3, Nwh=4, a=1, dt=0.1, num_points=1001):
 
   points = np.array(points)
   points = data_utils.sort_points(points)
-  points = resize_and_recenter(points, num_points, recenter=False)
+  points = resize_and_recenter(points, num_points)
   return points
 
 def butterfly(num_points=1001):
@@ -86,7 +104,7 @@ def lorenz(a=10,b=28,c=8/3, dt=0.01, iters=5000, num_points=1001):
     x += dx*dt; y += dy*dt; z += dz*dt
     points.append((x,y,z))
   points = np.array([x+1j*z for x,y,z in points])
-  points = resize_and_recenter(points, num_points, recenter=False)
+  points = resize_and_recenter(points, num_points)
   return points
 
 
@@ -114,17 +132,6 @@ def L_system_evaluate(instructions, angle=tau/4):
     elif instruction == '-':
       theta -= angle
   return np.array(points)
-
-
-def resize_and_recenter(points, num_points=None, recenter=False):
-  # Interpolate the curve to make it have less number of points.
-  if num_points is not None:
-    points = np.interp(x=np.linspace(0,1,num_points),xp=np.linspace(0,1,len(points)),fp=points)
-  else:
-    points = np.array(points)  
-  if recenter:  
-    points -= points.mean()  # Make it centered at origin (optional).
-  return points
 
 def peano_curve(iters=3, num_points=729):  # Disconnected.
   instructions = L_system_generate(rules={'L': 'LFRFL-F-RFLFR+F+LFRFL', 'R': 'RFLFR+F+LFRFL-F-RFLFR'},
@@ -183,7 +190,7 @@ def sierpinski_arrowhead(iters=7, num_points=2188):
   instructions = L_system_generate(rules={'X': 'YF+XF+Y', 'Y': 'XF-YF-X'},
                                  start='XF', iters=iters)
   points = L_system_evaluate(instructions=instructions, angle=tau/6)
-  points *= np.exp(1j*tau/3)
+  points *= np.exp(1j*tau/(2+iters%2)) # Make it always facing upwards.
   points = resize_and_recenter(points, num_points)
   return points  
 
@@ -221,5 +228,5 @@ def gosper(iters=4, num_points=2402):  # Disconnected.
   instructions = L_system_generate(rules={'F':'F-G--G+F++FF+G-', 'G': '+F-GG--G-F++F+G'},
                                  start='F', iters=iters)
   points = L_system_evaluate(instructions=instructions, angle=tau/6)
-  points = -resize_and_recenter(points, num_points)
+  points = resize_and_recenter(points, num_points)
   return points
