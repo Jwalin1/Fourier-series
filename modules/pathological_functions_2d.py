@@ -108,6 +108,18 @@ def lorenz(a=10,b=28,c=8/3, dt=0.01, iters=5000, num_points=1001):
   return points
 
 
+def _r(angle, a,b,m,n1,n2,n3):
+  x = abs(np.cos(m*angle/4) / a) ** n2
+  y = abs(np.sin(m*angle/4) / b) ** n3
+  return abs(x + y) ** (-1 / n1)
+  
+def superformula(angle=(0, tau), a=1,b=1,m=16,n1=0.5,n2=0.5,n3=16, num_points=1001):
+  angle = np.linspace(*angle, num_points)
+  radii = np.array(list(map(lambda angle: _r(angle,a,b,m,n1,n2,n3), angle)))
+  points = radii * np.exp(1j * angle)
+  return points
+
+
 def L_system_generate(rules, start, iters):
   state = start
   for _ in range(iters):
