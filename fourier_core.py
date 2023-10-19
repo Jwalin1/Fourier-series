@@ -5,30 +5,28 @@ tau = 2 * np.pi
 
 
 def DFT(x, num_coeffs=None):
-  """
-    Time goes from 0 to 1.
-    Only uses positive coeffs.
-    Gives exact result if full length is used
-    but doesnt improve progressively.
-  """
+  '''X[0] would contain the 0th frequency term.
+  First half of the array would contain the positive-frequency terms.
+  Second half of the array would contain the negative-frequency terms,
+  in increasing order starting from the most negative frequency'''
   if num_coeffs is None:
     num_coeffs = len(x)
 
   N = len(x)
   k, n = np.arange(num_coeffs), np.arange(N)
   X = np.dot(x, np.exp(-1j * tau * k[:,None] * n / N).T)
-  X /= N
   return X
 
 
 def inv_DFT(X, num_samples=None):
+  '''Should have the input in the same structure as returned by DFT.'''
   if num_samples is None:
     num_samples = len(X)
 
   N = len(X)
   k, n = np.arange(N), np.linspace(0, N-1, num_samples)
   x = np.dot(X, np.exp(1j * tau * k * n[:,None] / N).T)
-  return x
+  return x / N
 
 
 def compute_DFT_approximation(x, num_coeffs=None, num_samples=None):
@@ -39,13 +37,9 @@ def compute_DFT_approximation(x, num_coeffs=None, num_samples=None):
 
 
 def compute_coeffs(points, num_coeffs=None, rule='Riemann'):
-  """
-    If rule is Riemann, it would be similar to DFT.
-    Time goes from 0 to 1.
-    Pairs of positive and negative coeffs are added.
-    Improves progressively as we increase the
-    number of coefficients used for approximation.
-  """
+  '''Pairs of positive and negative coeffs are added.
+  Improves progressively as we increase the
+  number of coefficients used for approximation'''
   if num_coeffs is None:
     num_coeffs = len(points)
 

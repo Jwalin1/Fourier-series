@@ -7,7 +7,7 @@ from xml.dom import minidom
 
 
 
-def parse_svg(svg_path, n_points=1000):
+def parse_svg(svg_path, n_points=1001):
   doc = minidom.parse(svg_path)
   path_strings = [path.getAttribute('d') for path in doc.getElementsByTagName('path')]
 
