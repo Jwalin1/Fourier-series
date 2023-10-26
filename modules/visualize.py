@@ -61,11 +61,18 @@ def compute_arrows(lines):
   arrows[:,2] = lines[:,1] - arrow_lens * np.exp(1j*(angles + tau/8))
   return arrows
 
-def compute_orientations(points_t0, points_t1):
-  dt0, dt1 = np.diff(points_t0), np.diff(points_t1)
-  arg1, arg2 = np.angle(dt0),  np.angle(dt1)
-  return np.sign(arg2-arg1)
+def compute_orientations(centers_t0, centers_t1):
+  dt0, dt1 = np.diff(centers_t0), np.diff(centers_t1)
+  arg0, arg1 = np.angle(dt0),  np.angle(dt1)
+  arg_diff = arg1 - arg0
+  arg_diff[abs(arg_diff) < 1e-15] = 0
+  return np.sign(arg_diff)
 
+def color_picker(orientation):
+  if orientation == 0: return 'w'
+  elif orientation == 1: return 'b'
+  elif orientation == -1: return 'r'
+    
 def plot_colored_lines(lines):
   plot_complex(lines[::2].T, color='red')
   plot_complex(lines[1::2].T, color='blue')
@@ -134,11 +141,7 @@ def epicycles_animate(centers_time, detail=7, show_stats=True, add_origin=False)
     centers_time = np.hstack((np.zeros((n_samples, 1)), centers_time))
 
   orientations = compute_orientations(centers_time[0], centers_time[1])
-  colors = []
-  for orientation in orientations:
-    if orientation == 0: colors.append('white')
-    elif orientation == 1: colors.append('red')
-    elif orientation == -1: colors.append('blue')
+  colors = list(map(color_picker, orientations))
   #Looping the data and capturing frame at each iteration
   for i, centers in enumerate(tqdm(centers_time, desc='generating epicycles animation')):
     _plot_epicycles_frame(centers, colors, curve=centers_time[:i+1, -1],

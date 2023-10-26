@@ -35,18 +35,31 @@ def compute_DFT_approximation(x, num_coeffs=None, num_samples=None):
   return x_appr
 
 
+# FFT is directly computed using np.fft.fft().
+def inv_FFT(coeffs: np.ndarray, num_coeffs: int) -> np.ndarray:
+  '''Zero out the lesser contributing coeffs so that curve length remains the same,
+  and we get a smooth approximation.'''
+  sequence = get_alternating_sequence(num_coeffs)
+  coeffs_partial = np.zeros_like(coeffs)
+  coeffs_partial[sequence] = coeffs[sequence]
+  points_appr = np.fft.ifft(coeffs_partial)
+  return points_appr
 
+
+
+def get_alternating_sequence(n):
+  indices = np.arange(n)           #  0,  1,  2,  3,  4, ...
+  signs = 2*(indices % 2) - 1      # -1,  1, -1,  1, -1, ...
+  magnitudes = (indices + 1) // 2  #  0,  1,  1,  2,  2, ...
+  return signs * magnitudes        #  0,  1, -1,  2, -2, ...
+  
 def compute_coeffs(points, num_coeffs=None, rule='Riemann'):
   '''Pairs of positive and negative coeffs are added.
   Improves progressively as we increase the
   number of coefficients used for approximation'''
   if num_coeffs is None:
     num_coeffs = len(points)
-
-  indices = np.arange(num_coeffs)  #  0,  1,  2,  3,  4, ...
-  signs = 2*(indices % 2) - 1      # -1,  1, -1,  1, -1, ...
-  magnitudes = (indices + 1) // 2  #  0,  1,  1,  2,  2, ...
-  sequence = signs * magnitudes    #  0,  1, -1,  2, -2, ...
+    sequence = get_alternating_sequence(num_coeffs)
 
   if rule == 'Riemann':
     # Last point is to be excluded in Riemann sum (Left Rule).
