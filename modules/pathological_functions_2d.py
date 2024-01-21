@@ -5,6 +5,12 @@ import matplotlib.pyplot as plt
 from skimage.measure import find_contours
 from skimage.morphology import binary_opening, binary_closing
 from skimage.morphology import binary_dilation, binary_erosion
+import alphashape, shapely
+
+import warnings
+warnings.filterwarnings("ignore", message="overflow encountered in square", category=RuntimeWarning)
+warnings.filterwarnings("ignore", message="invalid value encountered in square", category=RuntimeWarning)
+warnings.filterwarnings("ignore", message="invalid value encountered in less_equal", category=RuntimeWarning)
 
 from . import data_utils
 
@@ -20,7 +26,35 @@ def resize_and_recenter(points, num_points=None, recenter=False):
   if recenter:  
     points -= points.mean()  # Make it centered at origin (optional).
   return points
+
+
+def contour_from_img(z):
+  img = np.zeros_like(z, dtype=bool)
+  img[abs(z)<=2] = True
+
+  # Can optionally apply dilation/closing to not miss out points on boundary.
+  # img = binary_dilation(img)
+
+  # Boundary is the contour with max length.
+  contours = find_contours(img)
+  main_contour = max(contours, key=len)
+
+  points = main_contour[:,1] +  1j*main_contour[:,0]
+  return points
   
+
+def contour_from_points(z, alpha):
+  z_2d = np.column_stack((z.real, z.imag))
+  alpha_shape = alphashape.alphashape(z_2d, alpha=alpha)
+  
+  if isinstance(alpha_shape, shapely.geometry.multipolygon.MultiPolygon):
+    shape_lens = [len(poly.exterior.xy[0]) for poly in alpha_shape.geoms]
+    max_shape_id = shape_lens.index(max(shape_lens))
+    xs, ys = alpha_shape.geoms[max_shape_id].exterior.xy
+  else: # isinstance(alpha_shape, shapely.geometry.polygon.Polygon:
+    xs, ys = alpha_shape.exterior.xy
+  return np.array(xs) + 1j*np.array(ys)
+
 def mandelbrot(size, iters, num_points=1001):
   x, y = np.linspace(-2, 1, size), np.linspace(-1.5, 1.5, size)
   x, y = np.meshgrid(x, y)
@@ -28,21 +62,14 @@ def mandelbrot(size, iters, num_points=1001):
   z0 = x + 1j * y
   z = z0.copy()
   for _ in tqdm(range(iters)):
-    z[z<=2] = z[z<=2]**2 + z0[z<=2]
+    z = z**2 + z0
 
-  img = np.zeros_like(z0, dtype=bool)
-  img[z<=2] = True
-
-  # Can optionally apply dilation/closing to not miss out points on boundary.
-  img = binary_dilation(img)
-
-  # Boundary is the contour with max length.
-  contours = find_contours(img)
-  main_contour = max(contours, key=len)
-
-  points = main_contour[:,1] +  1j*main_contour[:,0]
+  # Use image to get the border of the shape.
+  points = contour_from_img(z)
   points.real = points.real*(3/size) - 2
   points.imag = points.imag*(3/size) - 1.5
+  # Use points to get the border of the shape.
+  # points = contour_from_points(z0[z<=2], 100.0)
 
   # Interpolate the curve to make it have less number of points
   points = resize_and_recenter(points, num_points)
