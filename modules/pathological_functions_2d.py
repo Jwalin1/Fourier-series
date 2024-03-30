@@ -42,7 +42,6 @@ def contour_from_img(z):
   points = main_contour[:,1] +  1j*main_contour[:,0]
   return points
   
-
 def contour_from_points(z, alpha):
   z_2d = np.column_stack((z.real, z.imag))
   alpha_shape = alphashape.alphashape(z_2d, alpha=alpha)
@@ -74,6 +73,7 @@ def mandelbrot(size, iters, num_points=1001):
   # Interpolate the curve to make it have less number of points
   points = resize_and_recenter(points, num_points)
   return points
+
 
 def fermat_spiral(time_range, num_points=1001):
   t = np.linspace(*time_range, num_points)
